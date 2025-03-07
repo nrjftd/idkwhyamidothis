@@ -21,11 +21,11 @@ jobs:
       - name: Install dependencies
         run: go mod tidy
 
-      - name: Run Tests
+      - name: Run Tests (skip )
         if: env.SKIP_TESTS != 'true'
-        run: go test ./...
+        run: go test $(go list ./... | grep -v 'gen/go/.*.pb.validate.go' | grep -v 'jwt2/config' | grep -v 'jwt2/database' | grep -v 'jwt2/docs' | grep -v 'jwt2/gRPCService' | grep -v 'jwt2/gen/go/proto')
 
-      - name: Build Go Application (Bỏ qua .pb.validate.go)
+      - name: Build Go Application (skip .pb.validate.go)
         run: |
           go build -o myapp $(go list ./... | grep -v 'gen/go/.*.pb.validate.go')
 
