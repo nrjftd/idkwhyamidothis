@@ -27,7 +27,7 @@ jobs:
 
       - name: Build Go Application (skip .pb.validate.go)
         run: |
-          go build -o myapp ./cmd/main.go
+          go build -o myapp ./main.go
 
 
   docker:
