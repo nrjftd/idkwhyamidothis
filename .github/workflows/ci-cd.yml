@@ -26,7 +26,7 @@ jobs:
         run: go test ./...
 
       - name: Build Go Application
-        run: go build -o myapp main.go
+        run: go build -o myapp $(go list ./... | grep -v '.pb.validate')
 
   docker:
     needs: build
@@ -63,3 +63,6 @@ jobs:
             docker stop myapp || true
             docker rm myapp || true
             docker run -d --name myapp -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/myapp:latest
+  linters-settings:
+  exclude:
+    - ".pb.validate"
