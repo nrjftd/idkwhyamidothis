@@ -3,7 +3,7 @@ name: CI/CD bruhhhhhh
 on:
   push:
     branches:
-      - main  
+      - master  
 
 jobs:
   build:
