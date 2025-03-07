@@ -56,7 +56,8 @@ jobs:
       - name: Debug SSH Key
         run: |
           echo "Checking SSH Key"
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 --decode | ssh-keygen -l -f -
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d | tee /tmp/private_key | ssh-keygen -lf -
+          chmod 600 /tmp/private_key
 
       - name: Debug SSH Connection
         run: |
