@@ -1,0 +1,83 @@
+syntax = "proto3";
+package proto.task.v1;
+option go_package = "jwt2/proto/task/v1";
+import "buf/validate/validate.proto";
+//protoc -I=C:/gl/jwt2/proto -I=C:/gl/jwt/proto/buf/validate --go_out=. --go_opt=paths=source_relative C:/gl/jwt2/proto/task/v1/task.proto
+//biên dịch gRPC:
+//- protoc -I=C:/gl/jwt2/proto -I=C:/gl/jwt/proto/buf/validate --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative C:/gl/jwt2/proto/task/v1/task.proto
+
+// protoc -I=proto `
+//   --go_out=proto --go_opt=paths=source_relative `
+//   --go-grpc_out=proto --go-grpc_opt=paths=source_relative `
+//   proto/task/v1/task.proto
+
+
+
+
+
+import "page/v1/page.proto"; 
+enum TaskStatus {
+    TASK_STATUS_UNSPECIFIED = 0;
+    TASK_STATUS_PENDING = 1;
+    TASK_STATUS_DOING = 2;
+    TASK_STATUS_DONE = 3;
+    TASK_STATUS_CANCELLED = 4;
+}
+
+message Task {
+    int32 id = 1;
+    string title = 2 [(buf.validate.field).string = {min_len: 1, max_len: 100}];
+    string description = 3 [(buf.validate.field).string.min_len = 1];
+    TaskStatus status = 4;
+    string created_at = 5;
+    string updated_at = 6;
+    string userID =7;
+}
+
+message CreateTaskRequest {
+    Task task = 1;
+}
+
+message CreateTaskResponse {
+    Task task = 1;
+}
+message GetTaskRequest{
+    string userID =1;
+    page.v1.PageRequest page =2;
+}
+message GetTaskResponse {
+    Task task =1;
+}
+
+message GetTaskByIdRequest {
+    int32 id = 1;
+}
+
+message GetTaskByIdResponse {
+    Task task = 1;
+}
+
+message DeleteTaskByIdRequest {
+    int32 id = 1;
+}
+
+message DeleteTaskByIdResponse {
+    string message = 1;
+}
+
+message UpdateTaskRequest {
+    Task task = 1;
+}
+
+message UpdateTaskResponse {
+    Task task = 1;
+}
+
+service TaskService{
+    rpc CreateTask(CreateTaskRequest) returns (CreateTaskResponse);
+    rpc GetTask(GetTaskRequest) returns (stream GetTaskResponse);
+    rpc GetTaskById(GetTaskByIdRequest) returns (GetTaskByIdResponse);
+    rpc DeleteTaskByID(DeleteTaskByIdRequest) returns(DeleteTaskByIdResponse);
+    rpc UpdateTask(UpdateTaskRequest) returns (UpdateTaskResponse);
+
+}

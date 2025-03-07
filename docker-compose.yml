@@ -1,0 +1,72 @@
+services:
+  db:
+    image: postgres:17
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app-networks
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:latest
+    restart: always
+    env_file:
+      - .env
+    environment:
+      -  REDIS_HOST=${REDIS_HOST}
+      -  REDIS_PORT=${REDIS_PORT}
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+    networks:
+      - app-networks
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    build: .
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "${APP_HTTP_PORT}:8080"
+      - "${APP_GRPC_PORT}:50051"
+    volumes:
+      - .:/app
+      - go-modules:/go/pkg/mod
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+     # DATABASE_URL: postgres://postgres:12345@db:5432/test?sslmode=disable
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@host.docker.internal:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable
+      REDIS_URL: redis://${REDIS_HOST}:6379
+      GO111MODULE: "on"
+      CGO_ENABLED: "0"
+      GOOS: "linux"
+    networks:
+      - app-networks
+networks:
+    app-networks:
+      driver: bridge
+volumes:
+    postgres_data:
+    go-modules:

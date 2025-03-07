@@ -1,0 +1,21 @@
+syntax ="proto3";
+package  proto.page.v1;
+option go_package = "jwt2/proto/page/v1";
+//protoc -I=C:/gl/jwt2/proto --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative C:/gl/jwt2/proto/page/v1/page.proto
+message PageRequest{
+    int32 page =1;
+    int32 limit =2;
+    int64 total =3;
+    string title =4;
+    string start_date =5;
+    string end_date =6;
+    repeated string status =7;
+
+}
+// protoc -I=proto `
+//   --go_out=proto --go_opt=paths=source_relative `
+//   --go-grpc_out=proto --go-grpc_opt=paths=source_relative `
+//   proto/page/v1/page.proto
+
+
+
