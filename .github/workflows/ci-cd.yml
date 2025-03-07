@@ -5,6 +5,7 @@ on:
     branches:
       - master  
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,15 +22,13 @@ jobs:
       - name: Install dependencies
         run: go mod tidy
 
-      - name: Run Tests (skip )
+      - name: Run Tests (skip)
         if: false
         run: go test ./...
 
       - name: Build Go Application (skip .pb.validate.go)
         run: |
           go build -o myapp ./main.go
-
-
   docker:
     needs: build
     runs-on: ubuntu-latest
@@ -54,6 +53,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Debug SSH Key
+        run: |
+          echo "Checking SSH Key"
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 --decode | ssh-keygen -l -f -
+
+      - name: Debug SSH Connection
+        run: |
+          echo "Testing SSH connection to server"
+          ssh -o StrictHostKeyChecking=no -i <(echo "${{ secrets.SSH_PRIVATE_KEY }}") ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "echo 'SSH connection successful'"
+
       - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@master
         with:
@@ -61,8 +70,17 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            echo "Disabling StrictHostKeyChecking"
+            mkdir -p ~/.ssh
+            echo "StrictHostKeyChecking no" >> ~/.ssh/config
+            echo "UserKnownHostsFile=/dev/null" >> ~/.ssh/config
+            
+            echo "Pulling latest Docker image"
             docker pull ${{ secrets.DOCKER_USERNAME }}/myapp:latest
+            
+            echo "Stopping old container"
             docker stop myapp || true
             docker rm myapp || true
+            
+            echo "Running new container"
             docker run -d --name myapp -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/myapp:latest
- 
