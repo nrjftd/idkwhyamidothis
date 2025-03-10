@@ -63,10 +63,10 @@ jobs:
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 --decode > ssh_key.pem
           chmod 600 ssh_key.pem
-   #   - name: Debug SSH Connection
-   #     run: |
-   #       echo "Testing SSH connection to server"
-   #       ssh -o StrictHostKeyChecking=no -i ssh_key.pem ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "echo 'SSH connection successful'"
+      - name: Debug SSH Connection
+        run: |
+          echo "Testing SSH connection to server"
+          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "echo 'SSH connection successful'"
       
      
       - name: Deploy to Server via SSH
