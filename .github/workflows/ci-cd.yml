@@ -80,7 +80,11 @@ jobs:
           fi
       - name: Debug SSH Connection
         run: |
-          ssh -vvv -o StrictHostKeyChecking=no -i <(echo "${{ secrets.SSH_PRIVATE_KEY }}") ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "echo 'SSH connection successful'"
+          SSH_USERNAME="${{ secrets.SSH_USERNAME }}"
+          SSH_HOST="${{ secrets.SSH_HOST }}"
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ssh_key.pem
+          chmod 600 ssh_key.pem
+          ssh -vvv -o StrictHostKeyChecking=no -i ssh_key.pem "$SSH_USERNAME@$SSH_HOST" "echo 'SSH connection successful'"
 
       - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@master
