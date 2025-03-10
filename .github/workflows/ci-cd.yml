@@ -52,6 +52,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      - name: Create SSH Key File
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ssh_key.pem
+          chmod 600 ssh_key.pem
+          ls -la ssh_key.pem
       ########
       - name: Check SSH Key File Type
         run: |
