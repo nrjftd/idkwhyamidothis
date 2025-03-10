@@ -53,13 +53,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Debug SSH Key
+      ########
+      - name: Check SSH Key File Type
         run: |
-          echo "Checking SSH Key"
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d | tee /tmp/private_key
-          chmod 600 /tmp/private_key
-          cat tmp/private_key
-
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 --decode > ssh_key.pem
+          chmod 600 ssh_key.pem
+          file ssh_key.pem
+      ########
       - name: Debug SSH Connection
         run: |
           echo "Testing SSH connection to server"
@@ -68,13 +68,7 @@ jobs:
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 --decode > ssh_key.pem
           chmod 600 ssh_key.pem
-      ########
-      - name: Check SSH Key File Type
-        run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 --decode > ssh_key.pem
-          chmod 600 ssh_key.pem
-          file ssh_key.pem
-      ########
+     
       - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@master
         with:
