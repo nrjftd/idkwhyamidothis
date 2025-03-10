@@ -59,10 +59,10 @@ jobs:
           chmod 600 ssh_key.pem
           file ssh_key.pem
       ########
-      - name: Decode SSH Key
-        run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 --decode > ssh_key.pem
-          chmod 600 ssh_key.pem
+    #  - name: Decode SSH Key
+    #    run: |
+    #      echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 --decode > ssh_key.pem
+    #      chmod 600 ssh_key.pem
       - name: Debug SSH Key
         run: |
           echo "Checking if SSH_PRIVATE_KEY exists..."
