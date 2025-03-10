@@ -73,7 +73,10 @@ jobs:
             echo "✅ SSH_PRIVATE_KEY is set."
             echo "${{ secrets.SSH_PRIVATE_KEY }}" | wc -l
           fi
-     
+      - name: Debug SSH Connection
+        run: |
+          ssh -vvv -o StrictHostKeyChecking=no -i <(echo "${{ secrets.SSH_PRIVATE_KEY }}") ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "echo 'SSH connection successful'"
+
       - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@master
         with:
