@@ -14,11 +14,11 @@ jobs:
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          if (!(Test-Path ~/.ssh/id_rsa)) {
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | Out-File -Encoding utf8 ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          if (!(Test-Path C:\Users\Admin\.ssh\id_rsa)) {
-            ssh-keygen -t rsa -b 4096 -f C:\Users\Admin\.ssh\id_rsa -N ""
             }
+
           
         shell: pwsh
 
@@ -38,6 +38,7 @@ jobs:
       - name: Run Tests (skip)
         if: false
         run: go test ./...
+
       - name: Test PostgreSQL connection
         run: |
           echo "Testing PostgreSQL connection..."
@@ -83,14 +84,16 @@ jobs:
 
       - name: Create .env file
         run: |
-          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" | Out-File -Encoding utf8 .env
-          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" | Out-File -Append -Encoding utf8 .env
-          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" | Out-File -Append -Encoding utf8 .env
-          echo "POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}" | Out-File -Append -Encoding utf8 .env
-          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" | Out-File -Append -Encoding utf8 .env
-          echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" | Out-File -Append -Encoding utf8 .env
-          echo "APP_HTTP_PORT=${{ secrets.APP_HTTP_PORT }}" | Out-File -Append -Encoding utf8 .env
-          echo "APP_GRPC_PORT=${{ secrets.APP_GRPC_PORT }}" | Out-File -Append -Encoding utf8 .env
+          @"
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
+          REDIS_HOST=${{ secrets.REDIS_HOST }}
+          REDIS_PORT=${{ secrets.REDIS_PORT }}
+          APP_HTTP_PORT=${{ secrets.APP_HTTP_PORT }}
+          APP_GRPC_PORT=${{ secrets.APP_GRPC_PORT }}
+          "@ | Out-File -Encoding utf8 .env
         shell: pwsh
       - name: stop existing container
         run: |
