@@ -39,6 +39,7 @@ jobs:
 
           # Kiểm tra kết nối SSH để tự động xác nhận fingerprint nếu cần
           ssh -o StrictHostKeyChecking=accept-new -T -p 443 git@ssh.github.com
+          if ($LASTEXITCODE -eq 1) { Write-Host "Ignoring exit code 1"; exit 0 }
         shell: pwsh
 
 
