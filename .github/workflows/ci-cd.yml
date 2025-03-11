@@ -22,6 +22,24 @@ jobs:
             ssh-keyscan github.com | Out-File -Encoding utf8 ~/.ssh/known_hosts -Append
         shell: pwsh
 
+      - name: Debug Known Hosts
+        run: |
+          echo "🔹 Known Hosts File:"
+          cat ~/.ssh/known_hosts
+        shell: pwsh
+
+      - name: Get GitHub Host Key
+        run: |
+          echo "🔹 GitHub Current Host Key:"
+          ssh-keyscan github.com
+        shell: pwsh
+
+
+
+
+
+
+
       - name: Checkout code
         uses: actions/checkout@v3
 
