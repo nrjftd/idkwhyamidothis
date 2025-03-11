@@ -38,7 +38,9 @@ jobs:
           ssh-keyscan -p 443 ssh.github.com 2>$null | Out-File -Encoding utf8 "$sshDir\known_hosts" -Append
 
           # Xác minh kết nối SSH
-          ssh -T -p 443 git@ssh.github.com || exit 0
+          ssh -T -p 443 git@ssh.github.com
+            if ($LASTEXITCODE -ne 0) { Write-Host "Ignoring error"; }
+
 
           # Cấu hình Git để sử dụng SSH trên Port 443
           git config --global core.sshCommand "ssh -p 443 -i E:/actions-runner/.ssh/id_rsa"
