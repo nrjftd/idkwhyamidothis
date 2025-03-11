@@ -13,12 +13,22 @@ jobs:
     steps:
       - name: Setup SSH Key
         run: |
-          if (-not (Test-Path "$env:USERPROFILE\.ssh")) { 
-            New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.ssh" 
-          }
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | Out-File -Encoding ascii "$env:USERPROFILE\.ssh\id_rsa"
-          icacls "$env:USERPROFILE\.ssh\id_rsa" /inheritance:r /grant:r "$env:USERNAME`:F"
-          ssh-keyscan github.com | Out-File -Encoding ascii "$env:USERPROFILE\.ssh\known_hosts"
+          $sshDir = "$env:USERPROFILE\.ssh"
+          if (-not (Test-Path $sshDir)) { New-Item -ItemType Directory -Force -Path $sshDir }
+          
+          # Lưu SSH private key
+          "${{ secrets.SSH_PRIVATE_KEY }}" | Out-File -Encoding ascii "$sshDir\id_rsa"
+          icacls "$sshDir\id_rsa" /inheritance:r /grant:r "$($env:USERNAME):F"
+          
+          # Thêm GitHub vào known_hosts
+          ssh-keyscan -p 443 github.com 2>$null | Out-File -Encoding utf8 "$sshDir\known_hosts" -Append
+          
+          # Khởi động SSH agent và thêm key
+          Start-Service ssh-agent
+          ssh-add "$sshDir\id_rsa"
+
+          # Đổi URL Git remote sang SSH
+          git remote set-url origin git@github.com:nrjftd/idkwhyamidothis.git
         shell: pwsh
 
       - name: Add GitHub to known_hosts
