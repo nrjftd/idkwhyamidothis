@@ -35,7 +35,9 @@ jobs:
         shell: pwsh
 
       - name: Debug SSH Connection
-        run: ssh -T -p 443 git@ssh.github.com || true
+        run:  ssh -T -p 443 git@ssh.github.com
+              if (-not $?) { Write-Host "Ignoring error"; exit 0 }
+        shell: pwsh
 
       - name: Configure SSH for GitHub
         run: |
