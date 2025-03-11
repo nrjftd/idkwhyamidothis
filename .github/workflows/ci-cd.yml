@@ -13,7 +13,9 @@ jobs:
     steps:
       - name: Setup SSH Key
         run: |
-          mkdir -p ~/.ssh
+          if (!(Test-Path ~/.ssh)) {
+            New-Item -ItemType Directory -Path ~/.ssh -Force
+          }
           if (!(Test-Path ~/.ssh/id_rsa)) {
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | Out-File -Encoding utf8 ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
