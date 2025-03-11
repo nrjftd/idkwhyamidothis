@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout code
@@ -17,21 +17,36 @@ jobs:
       - name: Setup Golang
         uses: actions/setup-go@v4
         with:
-          go-version: 1.21
+          go-version: 1.23
 
       - name: Install dependencies
         run: go mod tidy
+        shell: pwsh 
+
 
       - name: Run Tests (skip)
         if: false
         run: go test ./...
-
+      - name: Test PostgreSQL connection
+        run: |
+          echo "Testing PostgreSQL connection..."
+          $env:PGPASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
+          pg_isready -h localhost -p ${{ secrets.POSTGRES_PORT }} -U ${{ secrets.POSTGRES_USER }}
+        shell: pwsh
+        
       - name: Build Go Application (skip .pb.validate.go)
         run: |
-          go build -o myapp ./main.go
+          go build -o myapp.exe ./main.go
+        shell: pwsh
+      - name: clean upp
+        run: |
+          echo "clean ..."
+          if (Test-Path myapp.exe) { Remove-Item -Force myapp.exe }
+        shell: pwsh
+
   docker:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout code
@@ -39,71 +54,39 @@ jobs:
 
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+        shell: pwsh
 
       - name: Build & Push Docker Image
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/myapp:latest .
           docker push ${{ secrets.DOCKER_USERNAME }}/myapp:latest
+        shell: pwsh
 
   deploy:
     needs: docker
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Create SSH Key File
-        run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ssh_key.pem
-          chmod 600 ssh_key.pem
-          ls -la ssh_key.pem
-      ########
-      - name: Check SSH Key File Type
-        run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ssh_key.pem
-          chmod 600 ssh_key.pem
-          file ssh_key.pem
-      ########
-    #  - name: Decode SSH Key
-    #    run: |
-    #      echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 --decode > ssh_key.pem
-    #      chmod 600 ssh_key.pem
-      - name: Debug SSH Key
-        run: |
-          echo "Checking if SSH_PRIVATE_KEY exists..."
-          if [[ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]]; then
-            echo "❌ SSH_PRIVATE_KEY is empty or not set!"
-            exit 1
-          else
-            echo "✅ SSH_PRIVATE_KEY is set."
-            echo "${{ secrets.SSH_PRIVATE_KEY }}" | wc -l
-          fi
-      - name: Debug SSH Connection
-        run: |
-          SSH_USERNAME="${{ secrets.SSH_USERNAME }}"
-          SSH_HOST="${{ secrets.SSH_HOST }}"
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ssh_key.pem
-          chmod 600 ssh_key.pem
-          ssh -vvv -o StrictHostKeyChecking=no -i ssh_key.pem "$SSH_USERNAME@$SSH_HOST" "echo 'SSH connection successful'"
 
-      - name: Deploy to Server via SSH
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            echo "Disabling StrictHostKeyChecking"
-            mkdir -p ~/.ssh
-            echo "StrictHostKeyChecking no" >> ~/.ssh/config
-            echo "UserKnownHostsFile=/dev/null" >> ~/.ssh/config
-            
-            echo "Pulling latest Docker image"
-            docker pull ${{ secrets.DOCKER_USERNAME }}/myapp:latest
-            
-            echo "Stopping old container"
-            docker stop myapp || true
-            docker rm myapp || true
-            
-            echo "Running new container"
-            docker run -d --name myapp -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/myapp:latest
+      - name: Create .env file
+        run: |
+          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" | Out-File -Encoding utf8 .env
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" | Out-File -Append -Encoding utf8 .env
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" | Out-File -Append -Encoding utf8 .env
+          echo "POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}" | Out-File -Append -Encoding utf8 .env
+          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" | Out-File -Append -Encoding utf8 .env
+          echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" | Out-File -Append -Encoding utf8 .env
+          echo "APP_HTTP_PORT=${{ secrets.APP_HTTP_PORT }}" | Out-File -Append -Encoding utf8 .env
+          echo "APP_GRPC_PORT=${{ secrets.APP_GRPC_PORT }}" | Out-File -Append -Encoding utf8 .env
+        shell: pwsh
+      - name: stop existing container
+        run: |
+          echo "stopping existing containers ..."
+          docker-compose down || true
+        shell: pwsh
+      - name: Deploy with container compose
+        run: |
+          docker-compose up -d --build
+        shell: pwsh
