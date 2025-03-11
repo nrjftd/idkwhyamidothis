@@ -11,17 +11,12 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Setup SSH Agent
-        uses: webfactory/ssh-agent@v0.7.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Add GitHub to known_hosts
         run: |
             mkdir -p ~/.ssh
-            if (Test-Path "$env:USERPROFILE\.ssh\known_hosts") {
-            $knownHostsPath = "$env:USERPROFILE\.ssh\known_hosts"
-            (Get-Content $knownHostsPath | Where-Object {$_ -notmatch "github.com"}) | Set-Content $knownHostsPath
-            }
+            if (Test-Path ~/.ssh/known_hosts) {
+            ssh-keygen -R github.com
+              }
             ssh-keyscan github.com >> ~/.ssh/known_hosts
         shell: pwsh
       - name: Checkout code
