@@ -11,19 +11,11 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Setup SSH Key
-        run: |
-          if (!(Test-Path ~/.ssh)) {
-            New-Item -ItemType Directory -Path ~/.ssh -Force
-          }
-          if (!(Test-Path ~/.ssh/id_rsa)) {
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | Out-File -Encoding utf8 ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-            }
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
           
-        shell: pwsh
-
       - name: Checkout code
         uses: actions/checkout@v3
 
