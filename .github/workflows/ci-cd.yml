@@ -12,10 +12,9 @@ jobs:
 
     steps:
       - name: Trust Repository
-    run: |
-      git config --global --add safe.directory E:/actions-runner/_work/idkwhyamidothis/idkwhyamidothis
-    shell: pwsh
-
+        run: |
+          git config --global --add safe.directory E:/actions-runner/_work/idkwhyamidothis/idkwhyamidothis
+        shell: pwsh
       - name: Setup SSH Key
         run: |
           $sshDir = "$env:USERPROFILE\.ssh"
