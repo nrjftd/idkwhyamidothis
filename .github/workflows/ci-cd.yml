@@ -13,25 +13,11 @@ jobs:
     steps:
       - name: Add GitHub to known_hosts
         run: |
-            if (-not (Test-Path "$env:USERPROFILE\.ssh")) {
-            mkdir -p ~/.ssh  # Chỉ tạo thư mục nếu chưa tồn tại
-              }
-            if (Test-Path ~/.ssh/known_hosts) {
+          if (-not (Test-Path "$env:USERPROFILE\.ssh")) { New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.ssh" }
+          if (Test-Path "$env:USERPROFILE\.ssh\known_hosts") {
             ssh-keygen -R github.com
-              }
-            ssh-keyscan github.com | Out-File -Encoding utf8 ~/.ssh/known_hosts -Append
-        shell: pwsh
-
-      - name: Debug Known Hosts
-        run: |
-          echo "🔹 Known Hosts File:"
-          cat ~/.ssh/known_hosts
-        shell: pwsh
-
-      - name: Get GitHub Host Key
-        run: |
-          echo "🔹 GitHub Current Host Key:"
-          ssh-keyscan github.com
+          }
+          ssh-keyscan github.com | Out-File -Encoding utf8 "$env:USERPROFILE\.ssh\known_hosts" -Append
         shell: pwsh
 
       - name: Debug SSH Connection
@@ -42,20 +28,18 @@ jobs:
 
       - name: Configure SSH for GitHub
         run: |
-          mkdir -p ~/.ssh
-          echo "Host github.com" > ~/.ssh/config
-          echo "  Hostname ssh.github.com" >> ~/.ssh/config
-          echo "  Port 443" >> ~/.ssh/config
-          echo "  User git" >> ~/.ssh/config
-          chmod 600 ~/.ssh/config
-          ssh-keyscan -p 443 ssh.github.com >> ~/.ssh/known_hosts
-
-
-
-
+          $sshConfigPath = "$env:USERPROFILE\.ssh\config"
+          Set-Content -Path $sshConfigPath -Value @"
+          Host github.com
+            Hostname ssh.github.com
+            Port 443
+            User git
+          "@
+          ssh-keyscan -p 443 ssh.github.com | Out-File -Encoding utf8 "$env:USERPROFILE\.ssh\known_hosts" -Append
+        shell: pwsh
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Golang
         uses: actions/setup-go@v4
@@ -66,11 +50,6 @@ jobs:
         run: go mod tidy
         shell: pwsh 
 
-      
-      - name: Run Tests (skip)
-        if: false
-        run: go test ./...
-
       - name: Test PostgreSQL connection
         run: |
           echo "Testing PostgreSQL connection..."
@@ -78,13 +57,13 @@ jobs:
           pg_isready -h localhost -p ${{ secrets.POSTGRES_PORT }} -U ${{ secrets.POSTGRES_USER }}
         shell: pwsh
         
-      - name: Build Go Application (skip .pb.validate.go)
-        run: |
-          go build -o myapp.exe ./main.go
+      - name: Build Go Application
+        run: go build -o myapp.exe ./main.go
         shell: pwsh
-      - name: clean upp
+
+      - name: Clean up
         run: |
-          echo "clean ..."
+          echo "Cleaning up..."
           if (Test-Path myapp.exe) { Remove-Item -Force myapp.exe }
         shell: pwsh
 
@@ -94,7 +73,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
@@ -112,7 +91,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Create .env file
         run: |
@@ -127,12 +106,17 @@ jobs:
           APP_GRPC_PORT=${{ secrets.APP_GRPC_PORT }}
           "@ | Out-File -Encoding utf8 .env
         shell: pwsh
-      - name: stop existing container
+
+      - name: Stop existing container
         run: |
-          echo "stopping existing containers ..."
-          docker-compose down || true
+          echo "Stopping existing containers..."
+          if ((docker ps -q) -ne $null) {
+            docker-compose down
+          } else {
+            echo "No running containers to stop."
+          }
         shell: pwsh
-      - name: Deploy with container compose
-        run: |
-          docker-compose up -d --build
+
+      - name: Deploy with Docker Compose
+        run: docker-compose up -d --build
         shell: pwsh
