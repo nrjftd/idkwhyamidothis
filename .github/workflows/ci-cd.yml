@@ -11,6 +11,16 @@ jobs:
     runs-on: [self-hosted, windows]
 
     steps:
+      - name: Setup SSH Key
+        run: |
+          if (-not (Test-Path "$env:USERPROFILE\.ssh")) { 
+            New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.ssh" 
+          }
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | Out-File -Encoding ascii "$env:USERPROFILE\.ssh\id_rsa"
+          chmod 600 "$env:USERPROFILE\.ssh\id_rsa"
+          ssh-keyscan github.com | Out-File -Encoding ascii "$env:USERPROFILE\.ssh\known_hosts"
+        shell: pwsh
+        
       - name: Add GitHub to known_hosts
         run: |
           if (-not (Test-Path "$env:USERPROFILE\.ssh")) { New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.ssh" }
