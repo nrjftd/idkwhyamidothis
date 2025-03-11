@@ -125,6 +125,7 @@ jobs:
         run: |
           echo "Testing PostgreSQL connection..."
           $env:PGPASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
+          $env:Path += ";C:\Program Files\PostgreSQL\17\bin"
           pg_isready -h localhost -p ${{ secrets.POSTGRES_PORT }} -U ${{ secrets.POSTGRES_USER }}
         shell: pwsh
         
