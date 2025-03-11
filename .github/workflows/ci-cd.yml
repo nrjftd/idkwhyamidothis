@@ -54,7 +54,8 @@ jobs:
           $sshDir = "E:\actions-runner\.ssh"
           if (-not (Test-Path $sshDir)) { New-Item -ItemType Directory -Force -Path $sshDir }
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | Out-File -Encoding ascii "$sshDir\id_rsa"
-          chmod 600 "$sshDir\id_rsa"
+          icacls "$sshDir\id_rsa" /inheritance:r /grant:r "$($env:USERNAME):F"
+
         shell: pwsh
   
 
