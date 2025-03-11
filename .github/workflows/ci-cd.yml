@@ -37,6 +37,15 @@ jobs:
       - name: Debug SSH Connection
         run: ssh -T -p 443 git@ssh.github.com
 
+      - name: Configure SSH for GitHub
+        run: |
+          mkdir -p ~/.ssh
+          echo "Host github.com" > ~/.ssh/config
+          echo "  Hostname ssh.github.com" >> ~/.ssh/config
+          echo "  Port 443" >> ~/.ssh/config
+          echo "  User git" >> ~/.ssh/config
+          chmod 600 ~/.ssh/config
+          ssh-keyscan -p 443 ssh.github.com >> ~/.ssh/known_hosts
 
 
 
