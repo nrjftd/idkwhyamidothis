@@ -13,12 +13,15 @@ jobs:
     steps:
       - name: Add GitHub to known_hosts
         run: |
-            mkdir -p ~/.ssh
+            if (-not (Test-Path "$env:USERPROFILE\.ssh")) {
+            mkdir -p ~/.ssh  # Chỉ tạo thư mục nếu chưa tồn tại
+              }
             if (Test-Path ~/.ssh/known_hosts) {
             ssh-keygen -R github.com
               }
             ssh-keyscan github.com >> ~/.ssh/known_hosts
         shell: pwsh
+
       - name: Checkout code
         uses: actions/checkout@v3
 
