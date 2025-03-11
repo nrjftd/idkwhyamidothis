@@ -23,6 +23,13 @@ jobs:
         run: go mod tidy
         shell: pwsh 
 
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+        shell: pwsh
 
       - name: Run Tests (skip)
         if: false
