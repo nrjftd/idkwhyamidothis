@@ -110,6 +110,7 @@ jobs:
           go version
           go env
         shell: pwsh
+
       - name: Setup Golang
         uses: actions/setup-go@v4
         with:
@@ -118,6 +119,7 @@ jobs:
       - name: Install dependencies
         run: go mod tidy
         shell: pwsh 
+
 
       - name: Test PostgreSQL connection
         run: |
