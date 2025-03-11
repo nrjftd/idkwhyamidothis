@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: [self-hosted, windows]
 
     steps:
       - name: Add GitHub to known_hosts
@@ -34,6 +34,8 @@ jobs:
           ssh-keyscan github.com
         shell: pwsh
 
+      - name: Debug SSH Connection
+        run: ssh -T -p 443 git@ssh.github.com
 
 
 
