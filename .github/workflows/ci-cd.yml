@@ -17,10 +17,10 @@ jobs:
             New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.ssh" 
           }
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | Out-File -Encoding ascii "$env:USERPROFILE\.ssh\id_rsa"
-          chmod 600 "$env:USERPROFILE\.ssh\id_rsa"
+          icacls "$env:USERPROFILE\.ssh\id_rsa" /inheritance:r /grant:r "$env:USERNAME`:F"
           ssh-keyscan github.com | Out-File -Encoding ascii "$env:USERPROFILE\.ssh\known_hosts"
         shell: pwsh
-        
+
       - name: Add GitHub to known_hosts
         run: |
           if (-not (Test-Path "$env:USERPROFILE\.ssh")) { New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.ssh" }
