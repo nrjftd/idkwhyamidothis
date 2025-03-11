@@ -57,8 +57,10 @@ jobs:
           icacls "$sshDir\id_rsa" /inheritance:r /grant:r "$($env:USERNAME):F"
 
         shell: pwsh
-  
-
+            #- name: lmao
+            #  run: fool
+            ##  i'm too dumb
+            # shell: lmaoshell
       - name: Add GitHub to known_hosts
         run: |
           $sshDir = "$env:USERPROFILE\.ssh"
@@ -103,7 +105,11 @@ jobs:
         uses: actions/checkout@v4
         with: 
           ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
+      - name: Debug Go Version
+        run: |
+          go version
+          go env
+        shell: pwsh
       - name: Setup Golang
         uses: actions/setup-go@v4
         with:
